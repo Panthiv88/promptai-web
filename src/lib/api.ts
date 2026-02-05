@@ -1,6 +1,19 @@
 import { getToken } from "./auth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+const DEVICE_ID_KEY = "promptai_device_id";
+
+// Generate or retrieve unique device ID for this browser
+function getOrCreateDeviceId(): string {
+  if (typeof window === "undefined") return "";
+
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  if (!deviceId) {
+    deviceId = "web_" + crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  }
+  return deviceId;
+}
 
 interface RequestOptions {
   method?: string;
@@ -44,10 +57,24 @@ export const api = {
   signup: (email: string, password: string) =>
     request("/auth/signup", { method: "POST", body: { email, password } }),
   login: (email: string, password: string) =>
-    request("/auth/login", { method: "POST", body: { email, password } }),
+    request("/auth/login", {
+      method: "POST",
+      body: { email, password, device_id: getOrCreateDeviceId() },
+    }),
   googleAuth: (credential: string) =>
-    request("/auth/google", { method: "POST", body: { credential } }),
-  me: () => request("/auth/me"),
+    request("/auth/google", {
+      method: "POST",
+      body: { credential, device_id: getOrCreateDeviceId() },
+    }),
+  me: () => {
+    const deviceId = getOrCreateDeviceId();
+    return request(`/auth/me?device_id=${encodeURIComponent(deviceId)}`);
+  },
+  resetDevice: () =>
+    request("/auth/reset-device", {
+      method: "POST",
+      body: { device_id: getOrCreateDeviceId() },
+    }),
 
   // Billing
   createCheckoutSession: (plan: string, billingFrequency: string) =>
@@ -74,12 +101,12 @@ export const api = {
   enhance: (rawText: string, licenseKey?: string) =>
     request("/api/enhance", {
       method: "POST",
-      body: { text: rawText, license_key: licenseKey, mode: "enhance" },
+      body: { text: rawText, license_key: licenseKey, mode: "enhance", device_id: getOrCreateDeviceId() },
     }),
 
   followup: (rawText: string, threadId: string, licenseKey?: string) =>
     request("/api/enhance", {
       method: "POST",
-      body: { text: rawText, license_key: licenseKey, mode: "followup", thread_id: threadId },
+      body: { text: rawText, license_key: licenseKey, mode: "followup", thread_id: threadId, device_id: getOrCreateDeviceId() },
     }),
 };
