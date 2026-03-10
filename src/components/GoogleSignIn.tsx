@@ -2,11 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { api } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { setToken, setRefreshToken } from "@/lib/auth";
 
 interface GoogleSignInProps {
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  onMfaRequired?: (mfaToken: string) => void;
   buttonText?: "signin_with" | "signup_with" | "continue_with";
 }
 
@@ -36,7 +37,7 @@ declare global {
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-export default function GoogleSignIn({ onSuccess, onError, buttonText = "continue_with" }: GoogleSignInProps) {
+export default function GoogleSignIn({ onSuccess, onError, onMfaRequired, buttonText = "continue_with" }: GoogleSignInProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
@@ -66,7 +67,12 @@ export default function GoogleSignIn({ onSuccess, onError, buttonText = "continu
   async function handleCredentialResponse(response: { credential: string }) {
     try {
       const data = await api.googleAuth(response.credential);
+      if (data.mfa_required) {
+        onMfaRequired?.(data.mfa_token as string);
+        return;
+      }
       setToken(data.access_token as string);
+      if (data.refresh_token) setRefreshToken(data.refresh_token as string);
       onSuccess?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Google sign in failed";
