@@ -11,11 +11,17 @@ export default function Header() {
   const pathname = usePathname();
   const [logged, setLogged] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Re-check auth state on every route change
   useEffect(() => {
     setLogged(isLoggedIn());
   }, [pathname]);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
 
   function handleLogout() {
     clearToken();
@@ -24,50 +30,76 @@ export default function Header() {
   }
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-[#0a0b10]/80 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/20"
+          : "bg-transparent border-b border-transparent"
+      }`}
+    >
+      <nav className="w-full px-6 sm:px-10 lg:px-20 xl:px-28 2xl:px-36">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-3.5 group">
             <Image
               src="/logo.png"
               alt="PromptAI"
-              width={36}
-              height={36}
-              className="rounded-lg"
+              width={52}
+              height={52}
+              className="rounded-xl transition-transform group-hover:scale-105"
             />
-            <span className="font-semibold text-xl">PromptAI</span>
+            <span className="font-display font-bold text-2xl text-white tracking-tight">
+              PromptAI
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/demo" className="text-gray-600 hover:text-gray-900 transition-colors">
-              Try Demo
+          <div className="hidden md:flex items-center gap-2">
+            <Link
+              href="/demo"
+              className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+            >
+              Demo
             </Link>
-            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link
+              href="/pricing"
+              className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+            >
               Pricing
             </Link>
             {logged ? (
               <>
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+                >
                   Dashboard
+                </Link>
+                <Link
+                  href="/saved-prompts"
+                  className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+                >
+                  Saved
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
                 >
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link
+                  href="/login"
+                  className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+                >
                   Log in
                 </Link>
                 <Link
                   href="/signup"
-                  className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ backgroundImage: "linear-gradient(180deg, #22D3EE, #14B8A6)" }}
+                  className="ml-2 px-5 py-2.5 text-[15px] font-semibold text-white rounded-lg transition-all hover:brightness-110"
+                  style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}
                 >
                   Get Started
                 </Link>
@@ -77,14 +109,14 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-[--text-secondary] hover:text-white transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
               )}
             </svg>
           </button>
@@ -92,18 +124,18 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t">
-            <div className="flex flex-col gap-4">
+          <div className="md:hidden py-4 border-t border-white/[0.06]">
+            <div className="flex flex-col gap-1">
               <Link
                 href="/demo"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Try Demo
+                Demo
               </Link>
               <Link
                 href="/pricing"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Pricing
@@ -112,17 +144,21 @@ export default function Header() {
                 <>
                   <Link
                     href="/dashboard"
-                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                    className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
+                  <Link
+                    href="/saved-prompts"
+                    className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Saved Prompts
+                  </Link>
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-gray-600 hover:text-gray-900 transition-colors text-left"
+                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                    className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all text-left"
                   >
                     Logout
                   </button>
@@ -131,15 +167,15 @@ export default function Header() {
                 <>
                   <Link
                     href="/login"
-                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                    className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Log in
                   </Link>
                   <Link
                     href="/signup"
-                    className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-opacity text-center"
-                    style={{ backgroundImage: "linear-gradient(180deg, #22D3EE, #14B8A6)" }}
+                    className="mt-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg text-center transition-all hover:brightness-110"
+                    style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Get Started

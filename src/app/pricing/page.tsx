@@ -59,25 +59,23 @@ export default function PricingPage() {
 
   function handleSelectPlan(plan: "BASIC" | "PRO") {
     if (!isLoggedIn()) {
-      // Redirect to signup with plan info
       router.push(`/signup?plan=${plan}&frequency=${frequency}`);
     } else {
-      // Redirect to checkout
       router.push(`/billing/checkout?plan=${plan}&frequency=${frequency}`);
     }
   }
 
   return (
-    <main className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen py-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <ScrollAnimation animation="fade-up">
-          <div className="text-center mb-8">
-            <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+          <div className="text-center mb-10">
+            <Link href="/" className="text-sm text-[--text-muted] hover:text-[--text-secondary] transition-colors">
               &larr; Back to home
             </Link>
-            <h1 className="text-3xl font-bold mt-4">Choose Your Plan</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="font-display text-3xl sm:text-4xl font-bold mt-6">Choose your plan</h1>
+            <p className="text-[--text-secondary] mt-3">
               Start with a 5-day free trial. 1 prompt per day, no credit card required.
             </p>
           </div>
@@ -85,16 +83,16 @@ export default function PricingPage() {
 
         {/* Billing frequency toggle */}
         <ScrollAnimation animation="fade-up" delay={100}>
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex rounded-lg border p-1 bg-gray-50">
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex rounded-xl border border-white/[0.06] p-1 bg-white/[0.02]">
               {(["MONTHLY", "QUARTERLY", "ANNUAL"] as BillingFrequency[]).map((freq) => (
                 <button
                   key={freq}
                   onClick={() => setFrequency(freq)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     frequency === freq
-                      ? "bg-white shadow text-gray-900"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-white/[0.08] text-white shadow-sm"
+                      : "text-[--text-muted] hover:text-[--text-secondary]"
                   }`}
                 >
                   {freq.charAt(0) + freq.slice(1).toLowerCase()}
@@ -105,7 +103,7 @@ export default function PricingPage() {
         </ScrollAnimation>
 
         {/* Plans grid */}
-        <StaggeredAnimation animation="fade-up" staggerDelay={150} className="grid md:grid-cols-2 gap-6">
+        <StaggeredAnimation animation="fade-up" staggerDelay={150} className="grid md:grid-cols-2 gap-5">
           {(["BASIC", "PRO"] as const).map((planKey) => {
             const plan = PLANS[planKey];
             const price = plan.prices[frequency];
@@ -114,50 +112,38 @@ export default function PricingPage() {
             return (
               <div
                 key={planKey}
-                className={`border rounded-xl p-6 transition-all hover:shadow-lg ${
-                  isPro ? "ring-2" : ""
+                className={`glass-card rounded-2xl p-7 relative transition-all ${
+                  isPro ? "border-teal-500/30" : ""
                 }`}
-                style={isPro ? { borderColor: "#14B8A6", boxShadow: "0 0 0 2px #14B8A6" } : {}}
+                style={isPro ? { boxShadow: "0 0 50px rgba(20,184,166,0.08)" } : {}}
               >
                 {isPro && (
                   <span
-                    className="inline-block text-white text-xs font-semibold px-2 py-1 rounded mb-4"
-                    style={{ backgroundColor: "#14B8A6" }}
+                    className="absolute -top-3 left-6 px-3 py-1 rounded-full text-xs font-semibold text-white"
+                    style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}
                   >
                     Most Popular
                   </span>
                 )}
 
-                <h2 className="text-xl font-semibold">{plan.name}</h2>
-                <p className="text-gray-600 text-sm mt-1">{plan.description}</p>
+                <h2 className="text-xl font-display font-bold text-white">{plan.name}</h2>
+                <p className="text-sm text-[--text-muted] mt-1">{plan.description}</p>
 
-                <div className="mt-4">
-                  <span className="text-3xl font-bold">${price.amount}</span>
-                  <span className="text-gray-500 text-sm">
+                <div className="mt-5 flex items-baseline gap-1">
+                  <span className="text-4xl font-display font-bold text-white">${price.amount}</span>
+                  <span className="text-[--text-muted] text-sm">
                     /{frequency === "MONTHLY" ? "mo" : frequency === "QUARTERLY" ? "qtr" : "yr"}
                   </span>
                   {price.savings && (
-                    <span className="ml-2 text-green-600 text-sm font-medium">
-                      {price.savings}
-                    </span>
+                    <span className="ml-2 text-xs font-medium text-teal-400">{price.savings}</span>
                   )}
                 </div>
 
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start text-sm">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
+                    <li key={i} className="flex items-center gap-2.5 text-sm text-[--text-secondary]">
+                      <svg className="w-4 h-4 text-teal-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       {feature}
                     </li>
@@ -166,12 +152,12 @@ export default function PricingPage() {
 
                 <button
                   onClick={() => handleSelectPlan(planKey)}
-                  className="w-full mt-6 py-3 px-4 rounded-lg font-medium transition-all hover:opacity-90 text-white"
-                  style={{
-                    backgroundImage: isPro
-                      ? "linear-gradient(180deg, #22D3EE, #14B8A6)"
-                      : "linear-gradient(180deg, #374151, #1f2937)"
-                  }}
+                  className={`w-full mt-7 py-3 rounded-xl text-sm font-semibold transition-all hover:brightness-110 ${
+                    isPro
+                      ? "text-white"
+                      : "text-white bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08]"
+                  }`}
+                  style={isPro ? { background: "linear-gradient(135deg, #14b8a6, #0d9488)" } : {}}
                 >
                   Get Started
                 </button>
@@ -182,7 +168,7 @@ export default function PricingPage() {
 
         {/* Trial info */}
         <ScrollAnimation animation="fade-up" delay={300}>
-          <div className="mt-8 text-center text-sm text-gray-500">
+          <div className="mt-10 text-center text-sm text-[--text-muted]">
             <p>All plans include a 5-day free trial with 1 prompt per day.</p>
             <p className="mt-1">Cancel anytime. No questions asked.</p>
           </div>
