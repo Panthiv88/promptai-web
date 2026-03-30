@@ -1,4 +1,4 @@
-import { getToken, setToken, clearToken, getRefreshToken, setRefreshToken } from "./auth";
+import { clearToken } from "./auth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
@@ -11,27 +11,14 @@ interface RequestOptions {
 let refreshPromise: Promise<boolean> | null = null;
 
 async function attemptTokenRefresh(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken || !API_BASE) return false;
-
+  if (!API_BASE) return false;
   try {
     const res = await fetch(`${API_BASE}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      credentials: "include", // Backend reads refresh_token cookie, sets new access_token cookie
     });
-
-    if (!res.ok) return false;
-
-    const data = await res.json();
-    if (data.access_token) {
-      setToken(data.access_token);
-      if (data.refresh_token) {
-        setRefreshToken(data.refresh_token);
-      }
-      return true;
-    }
-    return false;
+    return res.ok;
   } catch {
     return false;
   }
@@ -49,12 +36,11 @@ async function request(path: string, { method = "GET", body }: RequestOptions = 
   if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE is not set");
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const token = getToken();
-  if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
+    credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -76,12 +62,11 @@ async function request(path: string, { method = "GET", body }: RequestOptions = 
     // Try refreshing the access token
     const refreshed = await refreshTokenWithMutex();
     if (refreshed) {
-      // Retry the original request with new token
-      const newToken = getToken();
-      if (newToken) headers["Authorization"] = `Bearer ${newToken}`;
+      // Retry the original request — new access_token cookie is set by the backend
       res = await fetch(`${API_BASE}${path}`, {
         method,
         headers,
+        credentials: "include",
         body: body ? JSON.stringify(body) : undefined,
       });
     } else {

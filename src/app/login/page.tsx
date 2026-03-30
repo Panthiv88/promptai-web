@@ -12,6 +12,13 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
 
+  function safeRedirect(url: string | null): string {
+    if (!url) return "/dashboard";
+    // Only allow relative paths — must start with / but not // (protocol-relative = external)
+    if (url.startsWith("/") && !url.startsWith("//")) return url;
+    return "/dashboard";
+  }
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +31,7 @@ function LoginContent() {
   const [mfaLoading, setMfaLoading] = useState(false);
 
   function handleGoogleSuccess() {
-    router.push(redirect || "/dashboard");
+    router.push(safeRedirect(redirect));
   }
 
   function handleGoogleError(errorMsg: string) {
@@ -44,7 +51,7 @@ function LoginContent() {
       }
       setToken(data.access_token as string);
       if (data.refresh_token) setRefreshToken(data.refresh_token as string);
-      router.push(redirect || "/dashboard");
+      router.push(safeRedirect(redirect));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -60,7 +67,7 @@ function LoginContent() {
       const data = await api.mfaVerify(mfaToken, mfaCode);
       setToken(data.access_token as string);
       if (data.refresh_token) setRefreshToken(data.refresh_token as string);
-      router.push(redirect || "/dashboard");
+      router.push(safeRedirect(redirect));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "MFA verification failed");
     } finally {

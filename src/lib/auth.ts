@@ -6,9 +6,8 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function setToken(token: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(TOKEN_KEY, token);
+export function setToken(_token: string): void {
+  // Token is now set as httpOnly cookie by the backend — no client-side storage needed
 }
 
 export function getRefreshToken(): string | null {
@@ -16,9 +15,8 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
-export function setRefreshToken(token: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+export function setRefreshToken(_token: string): void {
+  // Refresh token is now set as httpOnly cookie by the backend
 }
 
 export function clearToken(): void {
