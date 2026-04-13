@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { clearToken, getToken } from "@/lib/auth";
 import Link from "next/link";
+import posthog from "posthog-js";
 
 interface UserData {
   email: string;
@@ -76,6 +77,12 @@ export default function DashboardPage() {
       try {
         const data = await api.me();
         setMe(data as unknown as UserData);
+        const userData = data as unknown as { email: string; plan_id: string | null; subscription_status: string };
+        posthog.identify(userData.email, {
+          email: userData.email,
+          plan: userData.plan_id,
+          subscription_status: userData.subscription_status,
+        });
         try {
           const analyticsData = await api.getAnalytics();
           setAnalytics(analyticsData as unknown as AnalyticsData);
