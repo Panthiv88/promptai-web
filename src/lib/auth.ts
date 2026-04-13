@@ -1,7 +1,8 @@
+import posthog from "posthog-js";
+
 const AUTH_FLAG_KEY = "promptai_logged_in";
 
 export function getToken(): string | null {
-  // Auth is via httpOnly cookie now — return the flag so callers know we're logged in
   if (typeof window === "undefined") return null;
   return localStorage.getItem(AUTH_FLAG_KEY);
 }
@@ -13,7 +14,7 @@ export function setToken(_token: string): void {
 }
 
 export function getRefreshToken(): string | null {
-  return null; // Refresh token is in httpOnly cookie
+  return null;
 }
 
 export function setRefreshToken(_token: string): void {
@@ -26,6 +27,7 @@ export function clearToken(): void {
   // Clean up legacy keys
   localStorage.removeItem("promptai_token");
   localStorage.removeItem("promptai_refresh_token");
+  posthog.reset();
 }
 
 export function isLoggedIn(): boolean {
