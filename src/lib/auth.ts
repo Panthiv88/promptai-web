@@ -1,5 +1,3 @@
-import posthog from "posthog-js";
-
 const AUTH_FLAG_KEY = "promptai_logged_in";
 
 export function getToken(): string | null {
@@ -8,13 +6,12 @@ export function getToken(): string | null {
 }
 
 export function setToken(_token: string): void {
-  // Real token is in httpOnly cookie; store a flag so the frontend knows we're logged in
   if (typeof window === "undefined") return;
   localStorage.setItem(AUTH_FLAG_KEY, "1");
 }
 
 export function getRefreshToken(): string | null {
-  return null;
+  return null; // Refresh token is in httpOnly cookie — cannot be read from JS
 }
 
 export function setRefreshToken(_token: string): void {
@@ -27,7 +24,8 @@ export function clearToken(): void {
   // Clean up legacy keys
   localStorage.removeItem("promptai_token");
   localStorage.removeItem("promptai_refresh_token");
-  posthog.reset();
+  // Reset PostHog identity — dynamic import avoids static browser-only module at SSR scope
+  import("posthog-js").then((mod) => mod.default.reset()).catch(() => {});
 }
 
 export function isLoggedIn(): boolean {
