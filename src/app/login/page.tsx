@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { setToken, setRefreshToken } from "@/lib/auth";
 import Link from "next/link";
 import GoogleSignIn from "@/components/GoogleSignIn";
+import posthog from "posthog-js";
 
 function LoginContent() {
   const router = useRouter();
@@ -51,6 +52,7 @@ function LoginContent() {
       }
       setToken(data.access_token as string);
       if (data.refresh_token) setRefreshToken(data.refresh_token as string);
+      posthog.identify(email, { email });
       router.push(safeRedirect(redirect));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -67,6 +69,7 @@ function LoginContent() {
       const data = await api.mfaVerify(mfaToken, mfaCode);
       setToken(data.access_token as string);
       if (data.refresh_token) setRefreshToken(data.refresh_token as string);
+      posthog.identify(email, { email });
       router.push(safeRedirect(redirect));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "MFA verification failed");
