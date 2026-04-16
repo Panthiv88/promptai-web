@@ -68,6 +68,12 @@ export default function Header() {
               Pricing
             </Link>
             <Link
+              href="/community"
+              className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+            >
+              Community
+            </Link>
+            <Link
               href="/blog"
               className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
             >
@@ -145,6 +151,13 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Pricing
+              </Link>
+              <Link
+                href="/community"
+                className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Community
               </Link>
               <Link
                 href="/blog"
