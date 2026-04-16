@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Outfit, Syne, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CursorEffects from "@/components/CursorEffects";
+import { PostHogProvider } from "./providers";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -57,12 +59,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} ${syne.variable} ${dmSerif.variable} font-sans antialiased`}>
-        <div className="relative min-h-screen flex flex-col">
-          <CursorEffects />
-          <Header />
-          <main className="relative z-10 flex-1">{children}</main>
-          <Footer />
-        </div>
+        <Suspense fallback={null}>
+          <PostHogProvider>
+            <div className="relative min-h-screen flex flex-col">
+              <CursorEffects />
+              <Header />
+              <main className="relative z-10 flex-1">{children}</main>
+              <Footer />
+            </div>
+          </PostHogProvider>
+        </Suspense>
       </body>
     </html>
   );

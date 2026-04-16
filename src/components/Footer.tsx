@@ -43,6 +43,11 @@ export default function Footer() {
                   Chrome Extension
                 </a>
               </li>
+              <li>
+                <Link href="/blog" className="text-[--text-secondary] hover:text-white transition-colors">
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
 

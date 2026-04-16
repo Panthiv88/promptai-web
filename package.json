@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vercel/blob": "^2.3.3",
     "next": "^16.2.1",
+    "posthog-js": "^1.367.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
