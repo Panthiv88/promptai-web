@@ -15,6 +15,13 @@ function SignupContent() {
   const searchParams = useSearchParams();
   const redirectPlan = searchParams.get("plan");
   const redirectFrequency = searchParams.get("frequency");
+  const redirect = searchParams.get("redirect");
+
+  function safeRedirect(url: string | null): string {
+    if (!url) return "/dashboard";
+    if (url.startsWith("/") && !url.startsWith("//")) return url;
+    return "/dashboard";
+  }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +33,7 @@ function SignupContent() {
     if (redirectPlan && redirectFrequency) {
       router.push(`/billing/checkout?plan=${redirectPlan}&frequency=${redirectFrequency}`);
     } else {
-      router.push("/dashboard");
+      router.push(safeRedirect(redirect));
     }
   }
 
@@ -48,7 +55,7 @@ function SignupContent() {
       if (redirectPlan && redirectFrequency) {
         router.push(`/billing/checkout?plan=${redirectPlan}&frequency=${redirectFrequency}`);
       } else {
-        router.push("/dashboard");
+        router.push(safeRedirect(redirect));
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed");
