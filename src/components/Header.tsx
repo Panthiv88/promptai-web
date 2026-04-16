@@ -4,17 +4,30 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { isLoggedIn, clearToken } from "@/lib/auth";
+import { api } from "@/lib/api";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [logged, setLogged] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    setLogged(isLoggedIn());
+    const loggedNow = isLoggedIn();
+    setLogged(loggedNow);
+    if (!loggedNow) {
+      setUserId(null);
+      return;
+    }
+    (async () => {
+      try {
+        const me = (await api.me()) as { id?: number };
+        if (typeof me?.id === "number") setUserId(me.id);
+      } catch { /* 401 or network — leave userId null, profile link hidden */ }
+    })();
   }, [pathname]);
 
   useEffect(() => {
@@ -93,6 +106,14 @@ export default function Header() {
                 >
                   Saved
                 </Link>
+                {userId !== null && (
+                  <Link
+                    href={`/u/${userId}`}
+                    className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
+                  >
+                    Profile
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2.5 text-[15px] text-[--text-secondary] hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
@@ -182,6 +203,15 @@ export default function Header() {
                   >
                     Saved Prompts
                   </Link>
+                  {userId !== null && (
+                    <Link
+                      href={`/u/${userId}`}
+                      className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                  )}
                   <button
                     onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                     className="px-3 py-2.5 text-sm text-[--text-secondary] hover:text-white hover:bg-white/[0.04] rounded-lg transition-all text-left"
