@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import SignupGateModal from "@/components/SignupGateModal";
+import CommentsSection from "@/components/CommentsSection";
 import { getToken } from "@/lib/auth";
 
 interface CommunityPostDetail {
@@ -17,6 +18,8 @@ interface CommunityPostDetail {
   has_upvoted: boolean;
   published_at: string | null;
   author_id: number;
+  author_name: string;
+  comment_count: number;
 }
 
 export default function CommunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -86,6 +89,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
           <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-2">
             <span className="px-2 py-0.5 rounded bg-white/5">{post.category}</span>
             <span>{post.view_count} views</span>
+            <Link href={`/u/${post.author_id}`} className="hover:text-[var(--text-primary)] transition-colors">{post.author_name}</Link>
           </div>
           <h1 className="text-3xl font-bold">{post.title}</h1>
         </header>
@@ -116,6 +120,8 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
           <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Enhanced Prompt</h2>
           <div className="glass-card p-4 text-sm whitespace-pre-wrap">{post.prompt_text}</div>
         </section>
+
+        <CommentsSection postId={post.id} />
       </div>
 
       <SignupGateModal

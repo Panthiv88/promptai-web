@@ -16,6 +16,8 @@ interface CommunityPost {
   view_count: number;
   published_at: string | null;
   author_id: number;
+  author_name: string;
+  comment_count: number;
 }
 
 const CATEGORIES = ["Writing", "Code", "Marketing", "Business", "Research", "Creative"] as const;
@@ -113,6 +115,8 @@ export default function CommunityPage() {
                   <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-1">
                     <span className="px-2 py-0.5 rounded bg-white/5">{p.category}</span>
                     <span>#{idx + 1}</span>
+                    <Link href={`/u/${p.author_id}`} className="hover:text-[var(--text-primary)] transition-colors">{p.author_name}</Link>
+                    <span>💬 {p.comment_count}</span>
                   </div>
                   <Link href={`/community/${p.id}`} className="block font-semibold text-lg hover:text-[var(--brand-cyan)] transition-colors">
                     {p.title}
