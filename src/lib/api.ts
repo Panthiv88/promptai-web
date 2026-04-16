@@ -177,4 +177,32 @@ export const api = {
     request(`/api/saved-prompts/${id}`, { method: "DELETE" }),
   toggleFavorite: (id: number) =>
     request(`/api/saved-prompts/${id}/toggle-favorite`, { method: "POST" }),
+
+  // Community
+  listCommunityPosts: (params?: {
+    tab?: "hot" | "new" | "top";
+    category?: string;
+    time_window?: "day" | "week" | "month" | "all";
+    page?: number;
+    per_page?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params?.tab) qs.set("tab", params.tab);
+    if (params?.category) qs.set("category", params.category);
+    if (params?.time_window) qs.set("time_window", params.time_window);
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.per_page) qs.set("per_page", String(params.per_page));
+    const query = qs.toString();
+    return request(`/api/community/posts${query ? `?${query}` : ""}`);
+  },
+  getCommunityPost: (id: number) => request(`/api/community/posts/${id}`),
+  publishToCommunity: (savedPromptId: number, data: { category: string; title?: string }) =>
+    request(`/api/community/publish/${savedPromptId}`, {
+      method: "POST",
+      body: data as unknown as Record<string, unknown>,
+    }),
+  upvoteCommunityPost: (id: number) =>
+    request(`/api/community/posts/${id}/upvote`, { method: "POST" }),
+  removeCommunityUpvote: (id: number) =>
+    request(`/api/community/posts/${id}/upvote`, { method: "DELETE" }),
 };
