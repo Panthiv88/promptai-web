@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { getToken, clearToken } from "@/lib/auth";
 import Link from "next/link";
+import ShareToCommunityModal from "@/components/ShareToCommunityModal";
 
 interface SavedPrompt {
   id: number;
@@ -37,6 +38,9 @@ export default function SavedPromptsPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [shareId, setShareId] = useState<number | null>(null);
+  const [shareTitle, setShareTitle] = useState("");
+  const [shareSuccess, setShareSuccess] = useState(false);
 
   const loadPrompts = useCallback(async () => {
     setLoading(true);
@@ -363,6 +367,12 @@ export default function SavedPromptsPage() {
                   >
                     {copiedId === prompt.id ? "Copied!" : "Copy"}
                   </button>
+                  <button
+                    onClick={() => { setShareId(prompt.id); setShareTitle(prompt.title); }}
+                    className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-cyan-400 hover:bg-cyan-500/10 transition-all"
+                  >
+                    Share
+                  </button>
                   {editingId === prompt.id ? (
                     <>
                       <button
@@ -439,6 +449,21 @@ export default function SavedPromptsPage() {
           </div>
         )}
       </div>
+      {shareId !== null && (
+        <ShareToCommunityModal
+          open={true}
+          onClose={() => setShareId(null)}
+          savedPromptId={shareId}
+          defaultTitle={shareTitle}
+          onSuccess={() => setShareSuccess(true)}
+        />
+      )}
+      {shareSuccess && (
+        <div className="fixed bottom-6 right-6 glass-card rounded-xl p-4 text-sm text-white shadow-lg">
+          Submitted for review.
+          <button onClick={() => setShareSuccess(false)} className="ml-3 text-[--text-muted] hover:text-white text-xs">Dismiss</button>
+        </div>
+      )}
     </main>
   );
 }
