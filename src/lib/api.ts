@@ -205,4 +205,13 @@ export const api = {
     request(`/api/community/posts/${id}/upvote`, { method: "POST" }),
   removeCommunityUpvote: (id: number) =>
     request(`/api/community/posts/${id}/upvote`, { method: "DELETE" }),
+
+  // Profiles & comments
+  getUserProfile: (userId: number) => request(`/api/users/${userId}/profile`),
+  listComments: (postId: number) => request(`/api/community/posts/${postId}/comments`),
+  createComment: (postId: number, bodyText: string) =>
+    request(`/api/community/posts/${postId}/comments`, {
+      method: "POST",
+      body: { body: bodyText },
+    }),
 };
