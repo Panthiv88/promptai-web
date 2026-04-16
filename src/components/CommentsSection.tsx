@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MessageSquare, Send } from "lucide-react";
 import { api } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import SignupGateModal from "@/components/SignupGateModal";
+import { Skeleton } from "@/components/Skeleton";
 
 interface Comment {
   id: number;
@@ -13,6 +15,8 @@ interface Comment {
   author_name: string;
   created_at: string | null;
 }
+
+const MAX_LEN = 2000;
 
 export default function CommentsSection({ postId }: { postId: number }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -54,48 +58,85 @@ export default function CommentsSection({ postId }: { postId: number }) {
     }
   }
 
+  const remaining = MAX_LEN - draft.length;
+  const nearLimit = remaining < 200;
+
   return (
-    <section className="mt-12">
-      <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">
-        Discussion ({comments.length})
+    <section className="mt-12 pt-8 border-t border-white/[0.06]">
+      <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-5 flex items-center gap-2">
+        <MessageSquare className="w-4 h-4 text-[var(--brand-cyan)]" />
+        Discussion
+        <span className="text-[var(--text-secondary)] font-normal">({comments.length})</span>
       </h2>
 
-      <form onSubmit={handleSubmit} className="mb-6">
-        <textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          maxLength={2000}
-          placeholder="Leave a comment…"
-          className="w-full glass-card p-3 text-sm bg-white/[0.02] rounded-lg resize-none focus:outline-none"
-          rows={3}
-        />
-        {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
-        <div className="flex justify-end mt-2">
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="glass-card p-1 rounded-xl focus-within:border-[var(--brand-teal)]/40 transition-colors duration-200">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            maxLength={MAX_LEN}
+            placeholder="Share your thoughts on this prompt…"
+            className="w-full bg-transparent p-3 text-sm rounded-lg resize-none focus:outline-none placeholder:text-[var(--text-secondary)]/60"
+            rows={3}
+          />
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <div className="text-xs">
+            {error ? (
+              <span className="text-red-400">{error}</span>
+            ) : draft.length > 0 ? (
+              <span className={nearLimit ? "text-amber-400" : "text-[var(--text-secondary)]"}>
+                {remaining} characters left
+              </span>
+            ) : (
+              <span className="text-[var(--text-secondary)]/60">Max 2,000 characters</span>
+            )}
+          </div>
           <button
             type="submit"
             disabled={submitting || !draft.trim()}
-            className="px-4 py-2 text-sm bg-[var(--brand-teal)] text-black rounded-lg font-medium disabled:opacity-50 hover:brightness-110 transition"
+            className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm bg-[var(--brand-teal)] text-black rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all duration-200"
           >
-            {submitting ? "Posting…" : "Post comment"}
+            <Send className="w-3.5 h-3.5" />
+            {submitting ? "Posting…" : "Post"}
           </button>
         </div>
       </form>
 
       {loading ? (
-        <p className="text-sm text-[var(--text-secondary)]">Loading…</p>
+        <ul className="space-y-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <li key={i} className="glass-card p-4 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </li>
+          ))}
+        </ul>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-[var(--text-secondary)]">No comments yet.</p>
+        <div className="glass-card p-8 text-center">
+          <MessageSquare className="w-8 h-8 text-[var(--text-secondary)]/50 mx-auto mb-2" />
+          <p className="text-sm text-[var(--text-secondary)]">No comments yet. Start the conversation.</p>
+        </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {comments.map((c) => (
-            <li key={c.id} className="glass-card p-4">
-              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-1">
-                <Link href={`/u/${c.author_id}`} className="hover:text-[var(--text-primary)] transition-colors font-medium">
+            <li key={c.id} className="glass-card p-4 transition-all duration-200 hover:border-white/[0.1]">
+              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-2">
+                <Link
+                  href={`/u/${c.author_id}`}
+                  className="cursor-pointer hover:text-[var(--text-primary)] hover:underline transition-colors font-medium"
+                >
                   {c.author_name}
                 </Link>
-                {c.created_at && <span>· {new Date(c.created_at).toLocaleDateString()}</span>}
+                {c.created_at && (
+                  <>
+                    <span>·</span>
+                    <span>{new Date(c.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+                  </>
+                )}
               </div>
-              <p className="text-sm whitespace-pre-wrap">{c.body}</p>
+              <p className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--text-primary)]/90">{c.body}</p>
             </li>
           ))}
         </ul>
