@@ -2,13 +2,35 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
 import { setToken, setRefreshToken } from "@/lib/auth";
 import Link from "next/link";
 import GoogleSignIn from "@/components/GoogleSignIn";
+import { AuthShell, GlassInputWrapper, type Testimonial } from "@/components/ui/auth-shell";
 
-// If an existing user with MFA signs in via Google on signup page,
-// redirect them to login for the MFA flow.
+const TESTIMONIALS: Testimonial[] = [
+  {
+    avatarSrc: "https://randomuser.me/api/portraits/women/44.jpg",
+    name: "Priya Patel",
+    handle: "@priyabuilds",
+    text: "Signed up in 20 seconds. Enhanced my first prompt and the output was night and day better.",
+  },
+  {
+    avatarSrc: "https://randomuser.me/api/portraits/men/75.jpg",
+    name: "Jordan Reyes",
+    handle: "@jordan_dev",
+    text: "The Chrome extension is what closed it for me — one click and my rough prompts get shipped.",
+  },
+  {
+    avatarSrc: "https://randomuser.me/api/portraits/women/68.jpg",
+    name: "Anya Volkov",
+    handle: "@anya_ux",
+    text: "Love the saved prompts library. It is my new second brain for every AI chat I run.",
+  },
+];
+
+const HERO_IMAGE = "https://images.unsplash.com/photo-1676299081847-824916de030a?w=2160&q=80";
 
 function SignupContent() {
   const router = useRouter();
@@ -26,6 +48,7 @@ function SignupContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -65,117 +88,133 @@ function SignupContent() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold text-white">Create your account</h1>
-          <p className="mt-2 text-[--text-secondary]">Start transforming your prompts today</p>
+    <AuthShell
+      title={<span className="font-light tracking-tighter">Create your account</span>}
+      description="Join thousands of creators turning rough ideas into production-ready prompts."
+      heroImageSrc={HERO_IMAGE}
+      testimonials={TESTIMONIALS}
+    >
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <div className="animate-element animate-delay-300">
+          <label htmlFor="email" className="text-sm font-medium text-[var(--text-secondary)]">
+            Email address
+          </label>
+          <GlassInputWrapper>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </GlassInputWrapper>
         </div>
 
-        <div className="glass-card rounded-2xl p-8">
-          <form className="space-y-5" onSubmit={onSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[--text-secondary] mb-1.5">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="w-full rounded-xl px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-[--text-muted] focus:outline-none focus:border-teal-500/40 focus:ring-1 focus:ring-teal-500/20 transition-all text-sm"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[--text-secondary] mb-1.5">
-                Password
-              </label>
+        <div className="animate-element animate-delay-400">
+          <label htmlFor="password" className="text-sm font-medium text-[var(--text-secondary)]">
+            Password
+          </label>
+          <GlassInputWrapper>
+            <div className="relative">
               <input
                 id="password"
-                type="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
                 required
                 minLength={8}
-                className="w-full rounded-xl px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-[--text-muted] focus:outline-none focus:border-teal-500/40 focus:ring-1 focus:ring-teal-500/20 transition-all text-sm"
+                className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none"
                 placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="cursor-pointer absolute inset-y-0 right-3 flex items-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[--text-secondary] mb-1.5">
-                Confirm password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                required
-                className="w-full rounded-xl px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-[--text-muted] focus:outline-none focus:border-teal-500/40 focus:ring-1 focus:ring-teal-500/20 transition-all text-sm"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-
-            {error && (
-              <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 text-white rounded-xl font-medium transition-all hover:brightness-110 disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}
-            >
-              {loading ? "Creating account..." : "Create account"}
-            </button>
-          </form>
-
-          <div className="my-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/[0.06]" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-[--bg-surface] text-[--text-muted] text-xs">or</span>
-              </div>
-            </div>
-          </div>
-
-          <GoogleSignIn
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            onMfaRequired={() => router.push("/login")}
-            buttonText="signup_with"
-          />
-
-          <p className="mt-6 text-center text-sm text-[--text-muted]">
-            Already have an account?{" "}
-            <Link href="/login" className="text-teal-400 hover:text-teal-300 font-medium transition-colors">
-              Log in
-            </Link>
-          </p>
+          </GlassInputWrapper>
         </div>
 
-        <p className="mt-6 text-center text-xs text-[--text-muted]">
-          By creating an account, you agree to our{" "}
-          <Link href="/terms" className="text-teal-400/70 hover:text-teal-400 transition-colors">Terms of Service</Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="text-teal-400/70 hover:text-teal-400 transition-colors">Privacy Policy</Link>
-        </p>
+        <div className="animate-element animate-delay-500">
+          <label htmlFor="confirmPassword" className="text-sm font-medium text-[var(--text-secondary)]">
+            Confirm password
+          </label>
+          <GlassInputWrapper>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              required
+              className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+              placeholder="Re-enter password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </GlassInputWrapper>
+        </div>
+
+        {error && (
+          <div className="animate-element animate-delay-500 p-3 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="animate-element animate-delay-600 cursor-pointer w-full rounded-2xl py-4 font-medium text-black disabled:opacity-50 transition-all hover:brightness-110"
+          style={{ background: "linear-gradient(135deg, #22d3ee, #14b8a6)" }}
+        >
+          {loading ? "Creating account…" : "Create account"}
+        </button>
+      </form>
+
+      <div className="animate-element animate-delay-700 relative flex items-center justify-center">
+        <span className="w-full border-t border-white/[0.08]" />
+        <span className="px-4 text-sm text-[var(--text-muted)] bg-[var(--bg-deep)] absolute">
+          Or continue with
+        </span>
       </div>
-    </div>
+
+      <div className="animate-element animate-delay-800">
+        <GoogleSignIn
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          onMfaRequired={() => router.push("/login")}
+          buttonText="signup_with"
+        />
+      </div>
+
+      <p className="animate-element animate-delay-900 text-center text-sm text-[var(--text-muted)]">
+        Already have an account?{" "}
+        <Link href="/login" className="text-[var(--brand-cyan)] hover:text-[var(--brand-teal)] font-medium transition-colors">
+          Sign in
+        </Link>
+      </p>
+
+      <p className="animate-element animate-delay-1000 text-center text-xs text-[var(--text-muted)]">
+        By creating an account, you agree to our{" "}
+        <Link href="/terms" className="text-[var(--brand-cyan)]/80 hover:text-[var(--brand-cyan)] transition-colors">Terms</Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-[var(--brand-cyan)]/80 hover:text-[var(--brand-cyan)] transition-colors">Privacy Policy</Link>.
+      </p>
+    </AuthShell>
   );
 }
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[--text-muted]">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[var(--text-muted)]">Loading…</div>}>
       <SignupContent />
     </Suspense>
   );

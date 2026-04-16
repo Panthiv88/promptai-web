@@ -2,11 +2,36 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
 import { setToken, setRefreshToken } from "@/lib/auth";
 import Link from "next/link";
 import GoogleSignIn from "@/components/GoogleSignIn";
 import posthog from "posthog-js";
+import { AuthShell, GlassInputWrapper, type Testimonial } from "@/components/ui/auth-shell";
+
+const TESTIMONIALS: Testimonial[] = [
+  {
+    avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
+    name: "Sarah Chen",
+    handle: "@sarahwrites",
+    text: "PromptAI turned my one-line ideas into polished briefs. My output doubled in a week.",
+  },
+  {
+    avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
+    name: "Marcus Johnson",
+    handle: "@marcusbuilds",
+    text: "It is the fastest prompt-polisher I have used. Ships straight into ChatGPT and Claude.",
+  },
+  {
+    avatarSrc: "https://randomuser.me/api/portraits/men/32.jpg",
+    name: "David Martinez",
+    handle: "@davidcreates",
+    text: "The community page alone is worth it — I borrow a new prompt every single day.",
+  },
+];
+
+const HERO_IMAGE = "https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80";
 
 function LoginContent() {
   const router = useRouter();
@@ -15,17 +40,16 @@ function LoginContent() {
 
   function safeRedirect(url: string | null): string {
     if (!url) return "/dashboard";
-    // Only allow relative paths — must start with / but not // (protocol-relative = external)
     if (url.startsWith("/") && !url.startsWith("//")) return url;
     return "/dashboard";
   }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // MFA state
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaToken, setMfaToken] = useState("");
   const [mfaCode, setMfaCode] = useState("");
@@ -80,156 +104,166 @@ function LoginContent() {
 
   if (mfaRequired) {
     return (
-      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="font-display text-3xl font-bold text-white">Two-Factor Authentication</h1>
-            <p className="mt-2 text-[--text-secondary]">Enter the 6-digit code from your authenticator app</p>
+      <AuthShell
+        title={<span className="font-light tracking-tighter">Two-factor check</span>}
+        description="Enter the 6-digit code from your authenticator app (or a recovery code)."
+        heroImageSrc={HERO_IMAGE}
+        testimonials={TESTIMONIALS}
+      >
+        <form className="space-y-5" onSubmit={onMfaSubmit}>
+          <div className="animate-element animate-delay-300">
+            <label htmlFor="mfaCode" className="text-sm font-medium text-[var(--text-secondary)]">
+              Authentication code
+            </label>
+            <GlassInputWrapper>
+              <input
+                id="mfaCode"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                maxLength={8}
+                className="w-full bg-transparent text-lg text-center tracking-[0.3em] p-4 rounded-2xl focus:outline-none"
+                placeholder="000000"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\s/g, ""))}
+              />
+            </GlassInputWrapper>
           </div>
 
-          <div className="glass-card rounded-2xl p-8">
-            <form className="space-y-5" onSubmit={onMfaSubmit}>
-              <div>
-                <label htmlFor="mfaCode" className="block text-sm font-medium text-[--text-secondary] mb-1.5">
-                  Authentication code
-                </label>
-                <input
-                  id="mfaCode"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  required
-                  maxLength={8}
-                  className="w-full rounded-xl px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-[--text-muted] focus:outline-none focus:border-teal-500/40 focus:ring-1 focus:ring-teal-500/20 transition-all text-sm text-center tracking-[0.3em] text-lg"
-                  placeholder="000000"
-                  value={mfaCode}
-                  onChange={(e) => setMfaCode(e.target.value.replace(/\s/g, ""))}
-                />
-                <p className="mt-2 text-xs text-[--text-muted]">You can also use a recovery code</p>
-              </div>
+          {error && (
+            <div className="animate-element animate-delay-400 p-3 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
-              {error && (
-                <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
-                  {error}
-                </div>
-              )}
+          <button
+            type="submit"
+            disabled={mfaLoading}
+            className="animate-element animate-delay-500 cursor-pointer w-full rounded-2xl py-4 font-medium text-black disabled:opacity-50 transition-all hover:brightness-110"
+            style={{ background: "linear-gradient(135deg, #22d3ee, #14b8a6)" }}
+          >
+            {mfaLoading ? "Verifying…" : "Verify"}
+          </button>
+        </form>
 
-              <button
-                type="submit"
-                disabled={mfaLoading}
-                className="w-full py-3 px-4 text-white rounded-xl font-medium transition-all hover:brightness-110 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}
-              >
-                {mfaLoading ? "Verifying..." : "Verify"}
-              </button>
-            </form>
-
-            <button
-              onClick={() => { setMfaRequired(false); setMfaCode(""); setError(""); }}
-              className="mt-4 w-full text-center text-sm text-[--text-muted] hover:text-[--text-secondary] transition-colors"
-            >
-              Back to login
-            </button>
-          </div>
-        </div>
-      </div>
+        <button
+          onClick={() => { setMfaRequired(false); setMfaCode(""); setError(""); }}
+          className="animate-element animate-delay-600 cursor-pointer text-center text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+        >
+          ← Back to login
+        </button>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold text-white">Welcome back</h1>
-          <p className="mt-2 text-[--text-secondary]">Log in to your PromptAI account</p>
+    <AuthShell
+      title={<span className="font-light tracking-tighter">Welcome back</span>}
+      description="Sign in to access your saved prompts, community, and enhancement history."
+      heroImageSrc={HERO_IMAGE}
+      testimonials={TESTIMONIALS}
+    >
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <div className="animate-element animate-delay-300">
+          <label htmlFor="email" className="text-sm font-medium text-[var(--text-secondary)]">
+            Email address
+          </label>
+          <GlassInputWrapper>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </GlassInputWrapper>
         </div>
 
-        <div className="glass-card rounded-2xl p-8">
-          <form className="space-y-5" onSubmit={onSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[--text-secondary] mb-1.5">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="w-full rounded-xl px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-[--text-muted] focus:outline-none focus:border-teal-500/40 focus:ring-1 focus:ring-teal-500/20 transition-all text-sm"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-[--text-secondary]">
-                  Password
-                </label>
-                <Link href="/forgot-password" className="text-xs text-teal-400 hover:text-teal-300 transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
+        <div className="animate-element animate-delay-400">
+          <label htmlFor="password" className="text-sm font-medium text-[var(--text-secondary)]">
+            Password
+          </label>
+          <GlassInputWrapper>
+            <div className="relative">
               <input
                 id="password"
-                type="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 required
-                className="w-full rounded-xl px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-[--text-muted] focus:outline-none focus:border-teal-500/40 focus:ring-1 focus:ring-teal-500/20 transition-all text-sm"
+                className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="cursor-pointer absolute inset-y-0 right-3 flex items-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
-
-            {error && (
-              <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 text-white rounded-xl font-medium transition-all hover:brightness-110 disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)" }}
-            >
-              {loading ? "Logging in..." : "Log in"}
-            </button>
-          </form>
-
-          <div className="my-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/[0.06]" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-[--bg-surface] text-[--text-muted] text-xs">or</span>
-              </div>
-            </div>
-          </div>
-
-          <GoogleSignIn
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            onMfaRequired={(token) => { setMfaRequired(true); setMfaToken(token); }}
-            buttonText="signin_with"
-          />
-
-          <p className="mt-6 text-center text-sm text-[--text-muted]">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-teal-400 hover:text-teal-300 font-medium transition-colors">
-              Sign up
-            </Link>
-          </p>
+          </GlassInputWrapper>
         </div>
+
+        <div className="animate-element animate-delay-500 flex items-center justify-end text-sm">
+          <Link href="/forgot-password" className="text-[var(--brand-cyan)] hover:text-[var(--brand-teal)] transition-colors">
+            Forgot password?
+          </Link>
+        </div>
+
+        {error && (
+          <div className="animate-element animate-delay-500 p-3 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="animate-element animate-delay-600 cursor-pointer w-full rounded-2xl py-4 font-medium text-black disabled:opacity-50 transition-all hover:brightness-110"
+          style={{ background: "linear-gradient(135deg, #22d3ee, #14b8a6)" }}
+        >
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+
+      <div className="animate-element animate-delay-700 relative flex items-center justify-center">
+        <span className="w-full border-t border-white/[0.08]" />
+        <span className="px-4 text-sm text-[var(--text-muted)] bg-[var(--bg-deep)] absolute">
+          Or continue with
+        </span>
       </div>
-    </div>
+
+      <div className="animate-element animate-delay-800">
+        <GoogleSignIn
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          onMfaRequired={(token) => { setMfaRequired(true); setMfaToken(token); }}
+          buttonText="signin_with"
+        />
+      </div>
+
+      <p className="animate-element animate-delay-900 text-center text-sm text-[var(--text-muted)]">
+        New to PromptAI?{" "}
+        <Link href="/signup" className="text-[var(--brand-cyan)] hover:text-[var(--brand-teal)] font-medium transition-colors">
+          Create account
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[--text-muted]">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[var(--text-muted)]">Loading…</div>}>
       <LoginContent />
     </Suspense>
   );
