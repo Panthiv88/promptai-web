@@ -147,8 +147,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           <motion.div
             layoutId="profile-avatar"
             className="shrink-0 shadow-lg shadow-[var(--brand-teal)]/10"
-            animate={profile.avatar_url ? undefined : { y: [0, -4, 0] }}
-            transition={profile.avatar_url ? undefined : { duration: 5, ease: "easeInOut", repeat: Infinity }}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
           >
             <Avatar
               name={profile.display_name}
