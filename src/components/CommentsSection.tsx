@@ -7,12 +7,16 @@ import { api } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import SignupGateModal from "@/components/SignupGateModal";
 import { Skeleton } from "@/components/Skeleton";
+import Avatar from "@/components/Avatar";
 
 interface Comment {
   id: number;
   body: string;
   author_id: number;
   author_name: string;
+  author_display_name?: string;
+  author_avatar_url?: string | null;
+  author_avatar_preset?: string | null;
   created_at: string | null;
 }
 
@@ -122,12 +126,20 @@ export default function CommentsSection({ postId }: { postId: number }) {
         <ul className="space-y-3">
           {comments.map((c) => (
             <li key={c.id} className="glass-card p-4 transition-all duration-200 hover:border-white/[0.1]">
-              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-2">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--text-secondary)] mb-2">
+                <Link href={`/u/${c.author_id}`} className="cursor-pointer shrink-0" aria-label={`View ${c.author_display_name || c.author_name}'s profile`}>
+                  <Avatar
+                    name={c.author_display_name || c.author_name}
+                    avatarUrl={c.author_avatar_url}
+                    avatarPreset={c.author_avatar_preset}
+                    size="sm"
+                  />
+                </Link>
                 <Link
                   href={`/u/${c.author_id}`}
                   className="cursor-pointer hover:text-[var(--text-primary)] hover:underline transition-colors font-medium"
                 >
-                  {c.author_name}
+                  {c.author_display_name || c.author_name}
                 </Link>
                 {c.created_at && (
                   <>
@@ -136,7 +148,7 @@ export default function CommentsSection({ postId }: { postId: number }) {
                   </>
                 )}
               </div>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--text-primary)]/90">{c.body}</p>
+              <p className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--text-primary)]/90 pl-10">{c.body}</p>
             </li>
           ))}
         </ul>

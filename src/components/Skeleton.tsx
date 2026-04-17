@@ -1,7 +1,7 @@
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse bg-white/[0.04] rounded ${className}`}
+      className={`skeleton-shimmer rounded ${className}`}
       aria-hidden="true"
     />
   );
@@ -31,17 +31,23 @@ export function CommunityPostSkeleton() {
 export function ProfileSkeleton() {
   return (
     <div className="space-y-8">
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-4 w-40" />
+      <div className="flex items-start gap-5">
+        <Skeleton className="w-20 h-20 rounded-2xl" />
+        <div className="flex-1 space-y-3 pt-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-40" />
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        <Skeleton className="h-24 rounded-xl" />
-        <Skeleton className="h-24 rounded-xl" />
-        <Skeleton className="h-24 rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
+        <Skeleton className="h-36 rounded-xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-16 rounded-xl" />
+          <Skeleton className="h-16 rounded-xl" />
+        </div>
       </div>
       <div className="space-y-3">
         <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-16 w-full rounded-lg" />
         <Skeleton className="h-16 w-full rounded-lg" />
       </div>
     </div>

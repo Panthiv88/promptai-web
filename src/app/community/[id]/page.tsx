@@ -3,11 +3,22 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUp, Copy, Check, Eye, ExternalLink } from "lucide-react";
+import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import SignupGateModal from "@/components/SignupGateModal";
 import CommentsSection from "@/components/CommentsSection";
 import { Skeleton } from "@/components/Skeleton";
 import { getToken } from "@/lib/auth";
+import Avatar from "@/components/Avatar";
+
+const sectionVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+const sectionItem = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 120, damping: 22 } },
+};
 
 interface CommunityPostDetail {
   id: number;
@@ -21,6 +32,9 @@ interface CommunityPostDetail {
   published_at: string | null;
   author_id: number;
   author_name: string;
+  author_display_name?: string;
+  author_avatar_url?: string | null;
+  author_avatar_preset?: string | null;
   comment_count: number;
 }
 
@@ -108,15 +122,22 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <main className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <Link
-          href="/community"
-          className="cursor-pointer inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200"
-        >
-          <ArrowLeft className="w-4 h-4" /> Community
-        </Link>
+      <motion.div
+        className="max-w-3xl mx-auto px-6 py-12"
+        variants={sectionVariants}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={sectionItem}>
+          <Link
+            href="/community"
+            className="cursor-pointer inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200"
+          >
+            <ArrowLeft className="w-4 h-4" /> Community
+          </Link>
+        </motion.div>
 
-        <header className="mt-6 mb-8">
+        <motion.header variants={sectionItem} className="mt-6 mb-8">
           <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-3 flex-wrap">
             <span className="px-2.5 py-1 rounded-md bg-[var(--brand-cyan)]/10 text-[var(--brand-cyan)] border border-[var(--brand-cyan)]/20 font-medium">
               {post.category}
@@ -128,18 +149,24 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
             <span>·</span>
             <Link
               href={`/u/${post.author_id}`}
-              className="cursor-pointer hover:text-[var(--text-primary)] hover:underline transition-colors"
+              className="cursor-pointer inline-flex items-center gap-1.5 hover:text-[var(--text-primary)] transition-colors group/author"
             >
-              {post.author_name}
+              <Avatar
+                name={post.author_display_name || post.author_name}
+                avatarUrl={post.author_avatar_url}
+                avatarPreset={post.author_avatar_preset}
+                size="xs"
+              />
+              <span className="group-hover/author:underline">{post.author_display_name || post.author_name}</span>
             </Link>
           </div>
           <h1 className="text-4xl font-bold tracking-tight">{post.title}</h1>
-        </header>
+        </motion.header>
 
-        <div className="flex flex-wrap gap-3 mb-10">
+        <motion.div variants={sectionItem} className="flex flex-wrap gap-3 mb-10">
           <button
             onClick={handleUpvote}
-            className={`cursor-pointer px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+            className={`cursor-pointer px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 active:scale-[0.96] ${
               post.has_upvoted
                 ? "bg-[var(--brand-teal)] text-black shadow-lg shadow-[var(--brand-teal)]/30 hover:brightness-110"
                 : "glass-card hover:bg-white/[0.06] hover:border-white/[0.12]"
@@ -147,11 +174,19 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
             aria-pressed={post.has_upvoted}
           >
             <ArrowUp className="w-4 h-4" strokeWidth={2.5} />
-            <span className="tabular-nums">{post.upvote_count}</span>
+            <motion.span
+              key={post.upvote_count}
+              initial={{ scale: 0.85, opacity: 0.6 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              className="tabular-nums"
+            >
+              {post.upvote_count}
+            </motion.span>
           </button>
           <button
             onClick={handleCopy}
-            className="cursor-pointer px-4 py-2.5 rounded-lg text-sm font-medium glass-card hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-200 flex items-center gap-2"
+            className="cursor-pointer px-4 py-2.5 rounded-lg text-sm font-medium glass-card hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-200 flex items-center gap-2 active:scale-[0.96]"
           >
             {copied ? (
               <><Check className="w-4 h-4 text-[var(--brand-teal)]" /> Copied</>
@@ -161,30 +196,32 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
           </button>
           <Link
             href="/"
-            className="cursor-pointer px-4 py-2.5 rounded-lg text-sm font-medium bg-[var(--brand-teal)]/15 border border-[var(--brand-teal)]/30 text-[var(--brand-teal)] hover:bg-[var(--brand-teal)]/25 transition-all duration-200 flex items-center gap-2"
+            className="cursor-pointer px-4 py-2.5 rounded-lg text-sm font-medium bg-[var(--brand-teal)]/15 border border-[var(--brand-teal)]/30 text-[var(--brand-teal)] hover:bg-[var(--brand-teal)]/25 transition-all duration-200 flex items-center gap-2 active:scale-[0.96]"
           >
             Try with PromptAI <ExternalLink className="w-3.5 h-3.5" />
           </Link>
-        </div>
+        </motion.div>
 
         {post.original_text && (
-          <section className="mb-8">
+          <motion.section variants={sectionItem} className="mb-8">
             <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Original</h2>
-            <div className="glass-card p-5 text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
+            <div className="glass-card p-5 text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               {post.original_text}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        <section className="mb-10">
+        <motion.section variants={sectionItem} className="mb-10">
           <h2 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Enhanced prompt</h2>
-          <div className="glass-card p-5 text-sm whitespace-pre-wrap leading-relaxed border-[var(--brand-teal)]/10">
+          <div className="glass-card p-5 text-sm whitespace-pre-wrap leading-relaxed border-[var(--brand-teal)]/10 shadow-[inset_0_1px_0_rgba(20,184,166,0.06)]">
             {post.prompt_text}
           </div>
-        </section>
+        </motion.section>
 
-        <CommentsSection postId={post.id} />
-      </div>
+        <motion.div variants={sectionItem}>
+          <CommentsSection postId={post.id} />
+        </motion.div>
+      </motion.div>
 
       <SignupGateModal
         open={gateOpen}

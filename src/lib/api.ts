@@ -214,4 +214,25 @@ export const api = {
       method: "POST",
       body: { body: bodyText },
     }),
+
+  // Profile personalization
+  updateMyProfile: (body: { display_name?: string | null; bio?: string | null; avatar_preset?: string | null }) =>
+    request("/api/users/me/profile", { method: "PATCH", body: body as Record<string, unknown> }),
+  setMyAvatarUrl: (avatar_url: string) =>
+    request("/api/users/me/avatar", { method: "POST", body: { avatar_url } }),
+  clearMyAvatar: () => request("/api/users/me/avatar", { method: "DELETE" }),
+
+  // Avatar upload — hits the Next.js /api route (multipart), which stores on Vercel Blob
+  // and returns the public URL. Call setMyAvatarUrl() with the returned URL to persist it.
+  uploadAvatar: async (file: File): Promise<string> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/avatar/upload", { method: "POST", body: fd });
+    const text = await res.text();
+    let data: Record<string, unknown> = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { /* ignore */ }
+    if (!res.ok) throw new Error(String(data.error || text || "Upload failed"));
+    if (typeof data.url !== "string") throw new Error("Upload succeeded but no URL returned");
+    return data.url;
+  },
 };
